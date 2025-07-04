@@ -1,64 +1,10 @@
 # main.py
 
-from dotenv import find_dotenv, load_dotenv
 from fasthtml.common import *
 from monsterui.all import *
 
-from src.app_config import APP_NOMBRE
-# Cargar variables de entorno
-# Busca el archivo .env
-env_file = find_dotenv(".env")
-
-if env_file and os.path.exists(env_file):
-    # Carga el archivo .env si existe
-    load_dotenv(env_file, override=True)
-    print(f"Archivo de configuración ({env_file}) cargado exitosamente.")
-else:
-    # Imprime un mensaje de error y termina el programa si el archivo no se encuentra
-    print("ERROR: No se encontró el fichero de configuración: .env")
-    sys.exit(1)
-
-# Leer variables de entorno
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-PORT = int(os.getenv("PORT", 8000))
-LIVE = os.getenv("LIVE", "False").lower() == "true"
-
 # Creamos la aplicación con tema "blue" de MonsterUI + DaisyUI activo
-app, rt = fast_app(
-    live=LIVE,
-    debug=DEBUG,
-    port=PORT,
-    static_path="static",
-    hdrs=Theme.green.headers(daisy=True),
-    htmlkw={"lang":"es", "data-theme":"light"}, # Pasamos estos parámetros al <html>
-)
-
-# 📌 Configurar Toasts -> TENGO QUE VER COMO FUNCIONA ESTO
-setup_toasts(app, duration=3000)
-
-# Ejecutar la app
-if __name__ == "__main__":
-    print("EJECUTANDO CON: " + "serve()->Live" if LIVE else "Uvicorn")
-
-    if LIVE:
-        print("Serve")
-        serve()
-    else:
-        port = int(os.getenv("PORT", default=5001))
-        print(f"Uvicorn {port=} {LIVE=}")
-
-        uvicorn.run(
-            'main:app',
-            host='0.0.0.0',
-            port=port,
-            workers=4,
-            reload=False
-        )
-
-
-
-
-
+app, rt = fast_app(hdrs=Theme.green.headers(daisy=True))
 
 
 def ex_navbar2():
@@ -71,7 +17,7 @@ def ex_navbar2():
             UkIcon('home',height=30,width=30),
             H2("Título")
         ),
-        cls="bg-gray-200 lg:p-4 p-2 lg:pr-60"
+        cls="bg-gray-200 lg:p-5 p-2 lg:pr-60"
     )
 
 @rt
@@ -88,7 +34,7 @@ def index():
             A(
                 DivLAligned(
                     UkIcon('recycle',height=30,width=30),
-                    H3(APP_NOMBRE, cls="pl-2"),
+                    H3("holded", cls="pl-2"),
                     cls="px-4"
                 ),
                 hx_get='/', hx_target="#main-content", onclick="hideSidebar()"
@@ -162,16 +108,13 @@ def index():
     # ----------------------------------------------------------------------------
     # 2. Navbar móvil (solo en <lg): "Mi Empresa" clicable y botón menú
     #    - añadimos 'shadow-md' para sombra debajo
-    mobile_navbar = Div(
-        cls="flex items-center justify-between p-4 bg-gray-700 text-white lg:hidden shadow-md"
-        )(
+    mobile_navbar = Div(cls="flex items-center justify-between p-4 bg-base-200 lg:hidden shadow-md")(
         A(
-            DivLAligned(
-                UkIcon('recycle',height=30,width=30),
-                H3(APP_NOMBRE, cls="pl-2"),
-                cls="lg:px-4 px-2"
-            ),
-            hx_get='/', hx_target="#main-content", onclick="hideSidebar()"
+            H1("Mi Empresa", cls=(TextT.lg, TextT.bold)),
+            href="/home",
+            hx_get="/home",
+            hx_target="#main-content",
+            cls="hover:underline"
         ),
         Label(
             "☰",
@@ -185,7 +128,7 @@ def index():
     #    - pt-4 en móvil para quedar cerca del navbar
     #    - lg:pt-0 en desktop
     #    - ml-0 lg:ml-64 para dejar espacio al sidebar en desktop
-    contenido_principal = Div(cls="pt-1 lg:pt-0 ml-0 lg:ml-64", id="main-content")(
+    contenido_principal = Div(cls="pt-4 lg:pt-0 ml-0 lg:ml-64", id="main-content")(
         ex_navbar2(),
         H1("Bienvenido al Dashboard", cls=(TextT.xl, TextT.bold, "mb-6")),
         P("Esta es la zona principal de la aplicación de gestión empresarial.", cls=TextPresets.muted_sm)
@@ -270,3 +213,7 @@ def mi_zona():
             ),
         )
     )
+
+
+if __name__ == "__main__":
+    serve()
