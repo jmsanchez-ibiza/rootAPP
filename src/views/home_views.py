@@ -10,50 +10,9 @@ from src.auth.login import is_user_admin, is_user_logged
 from src.auth.login_routes import login_form
 
 from src.app_config import APP_NOMBRE, NAVBAR_BG_COLOR, NAVBAR_FIXED_ON_TOP
+from src.views.components.buttons import ConfirmRedirectLink
 # from src.utils.js_scripts import show_toast
-# from src.views.components.buttons import ConfirmRedirectLink
 
-
-# def is_user_logged(session):
-#     return False
-
-# def is_user_admin(session):
-#     return False
-
-def ConfirmRedirectLink(
-    url: str,
-    mensaje: str,
-    titulo: str = "¿Estás seguro?",
-    tipo_alerta: str = "question",
-    cls: str = "btn btn-danger",
-    tooltip: str = "",
-    placement: str = "bottom",
-    children=None
-):
-    link_id = f"link-redirect-{uuid.uuid4().hex[:8]}"
-    children = children or []
-
-    attrs = {
-        "type": "button",
-        "cls": cls,
-        "onclick": (
-            f"confirmarHTMXAccion_click('{link_id}', `{titulo}`, `{mensaje}`, '{tipo_alerta}')"
-        )
-    }
-
-    if tooltip:
-        attrs["data_bs_toggle"] = "tooltip"
-        attrs["title"] = tooltip
-        attrs["data_bs_placement"] = placement
-
-    return Div(
-        Button(**attrs)(*children),
-        A(
-            href=url,
-            id=link_id,
-            cls="d-none"
-        )()
-    )
 
 # Activar ToolTips
 bootstrap_tooltips_js = Script(
@@ -341,88 +300,263 @@ def ex_navbar():
         cls="bg-gray-200 lg:p4 p-2 lg:pr-60"
     )
 
+def logout_button(caption:str=""):
+    return ConfirmRedirectLink(
+        url="/logout",
+        mensaje="Va a abandonar la sesión y para volver a acceder tendrá que introducir sus credenciales.",
+        titulo="¿Quiere cerrar la sesión?",
+        tipo_alerta="question",
+        cls="btn bg-red-600 hover:bg-red-400 text-white lg:mr-2 border-0",
+        tooltip="Cerrar la sesión",
+        placement="right",
+        children=[
+            UkIcon('log-out',height=20,width=20),
+            Span(style="font-size: 0.9rem;")(caption),
+        ]
+    )
+
 def main_page(session:dict={}):
     # ----------------------------------------------------------------------------
-    # 1. Sidebar con sombra en el lateral derecho e inferior
+    # 1. Sidebar
     sidebar = Div(
         cls="w-64 h-screen fixed inset-y-0 left-0 bg-gray-700 text-white overflow-auto hidden lg:block z-20 shadow-lg",
         id="sidebar"
     )(
-        # Logo / título de la empresa (solo visible en desktop)
-        Div(cls="hidden lg:flex items-center justify-center py-6")(
-            A(
-                DivLAligned(
-                    UkIcon('recycle',height=30,width=30),
-                    H3(APP_NOMBRE, cls="pl-2"),
-                    cls="px-4"
+        Div(cls="flex flex-col h-full")(
+            Div(cls="flex-1")(
+                # Logo
+                Div(cls="hidden lg:flex items-center justify-center py-6")(
+                    DivFullySpaced(
+                        A(
+                            DivLAligned(
+                                UkIcon('recycle', height=30, width=30),
+                                H3(APP_NOMBRE, cls="pl-2"),
+                                cls="px-4"
+                            ),
+                            href='/', onclick="hideSidebar()"
+                        ),
+                        logout_button()
+                    ),
                 ),
-                href='/', onclick="hideSidebar()"
-            ), cls=(TextT.lg, TextT.bold, "pb-6 pt-6")
-        ),
-        # "Inicio" carga el contenido de home vía HTMX
-        DivHStacked(
-            UkIcon(icon="home", cls="ml-4"),
-            A(
-                "Inicio",
-                href="/home",
-                cls=(TextT.bold, "ml-1"),
-                # hx_get="/",
-                # hx_target="#main-content",
-                onclick="hideSidebar()"
-            ),
-        ),
-        
-        Accordion(
-            AccordionItem(
+                # Inicio
                 DivHStacked(
-                    UkIcon(icon="chart-bar", cls="ml-4"),
-                    Span("Ventas", cls="ml-2")
+                    UkIcon(icon="home", cls="ml-4"),
+                    A("Inicio", href="/home", cls=(TextT.bold, "ml-1"), onclick="hideSidebar()")
                 ),
-                Ul(
-                    Li(
-                        A('Presupuestos', hx_get='/servicios', hx_target="#main-content", onclick="hideSidebar()", style="padding: 3px" )
+                # Accordion de ventas y compras
+                Accordion(
+                    AccordionItem(
+                        DivHStacked(UkIcon(icon="shopping-bag", cls="ml-4"), Span("Ventas", cls="ml-2")),
+                        Ul(
+                            Li(A('Presupuestos', hx_get='/servicios', hx_target="#main-content", onclick="hideSidebar()", cls="block")),
+                            Li(A('Pedidos', href='/home', onclick="hideSidebar()", cls="block")),
+                            hidden='',
+                            id='uk-nav-ventas',
+                            role='region',
+                            aria_labelledby='uk-nav-label-ventas',
+                            cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0'
+                        ),
+                        cls="p-0 m-0 border-none"
                     ),
-                    Li(
-                        A('Pedidos', href='/home', onclick="hideSidebar()", style="padding: 3px" )
+                    AccordionItem(
+                        DivHStacked(UkIcon(icon="shopping-cart", cls="ml-4"), Span("Compras", cls="ml-2")),
+                        Ul(
+                            Li(A('Noticias', hx_get='/noticias', hx_target="#main-content", onclick="hideSidebar()", cls="block")),
+                            Li(A('Servicios', hx_get='/servicios', hx_target="#main-content", onclick="hideSidebar()", cls="block")),
+                            hidden='',
+                            id='uk-nav-compras',
+                            role='region',
+                            aria_labelledby='uk-nav-label-compras',
+                            cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0'
+                        ),
+                        cls="border-none"
                     ),
-                    hidden='',
-                    id='uk-nav-ventas',
-                    role='region',
-                    aria_labelledby='uk-nav-label-ventas',
-                    cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0'
-                ),
-                cls="p-0 m-0 border-none"
+                    multiple=False,
+                    animation=True,
+                    cls="!space-y-0 !m-0 !p-0"
+                )
             ),
-            AccordionItem(
-                DivHStacked(
-                    UkIcon(icon="chart-bar", cls="ml-4"),
-                    Span("Compras", cls="ml-2")
-                ),
-                Ul(
-                    Li(
-                        A('Noticias', hx_get='/noticias', hx_target="#main-content", onclick="hideSidebar()", style="padding: 3px;")
-                    ),
-                    Li(
-                        A('Servicios', hx_get='/servicios', hx_target="#main-content", onclick="hideSidebar()", style="padding: 3px;")
-                    ),
-                    hidden='',
-                    id='uk-nav-compras',
-                    role='region',
-                    aria_labelledby='uk-nav-label-compras',
-                    cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0'
-                ),
-                cls="border-none"
-            ),
-            multiple=False,
-            animation=True,
-            cls="space-y-0 !m-0 !p-0"  # clave para quitar separación entre ítems
-        ),
-
-        # Botón "Ver planes" al final (solo en desktop)
-        Div(cls="hidden lg:block mt-3")(
+            # Botón fijo al fondo
+            Div(cls="hidden lg:block p-4 mt-auto")(
                 Button("Ver planes", cls=(ButtonT.primary, "w-full"))
+            )
         )
     )
+
+    sidebar = Div(
+            cls="w-64 h-screen fixed inset-y-0 left-0 bg-gray-700 text-white overflow-auto hidden lg:block z-20 shadow-lg",
+            id="sidebar"
+        )(
+            Div(cls="flex flex-col h-full")(
+                Div(cls="flex-1")(
+                    # Logo
+                    Div(cls="hidden lg:flex items-center justify-center py-6")(
+                        DivFullySpaced(
+                            A(
+                                DivLAligned(
+                                    UkIcon('recycle', height=30, width=30),
+                                    H3(APP_NOMBRE, cls="pl-2"),
+                                    cls="px-4"
+                                ),
+                                href='/', onclick="hideSidebar()"
+                            ),
+                            logout_button()
+                        )
+                    ),
+                    # Inicio
+                    DivHStacked(
+                        UkIcon(icon="home", cls="ml-4"),
+                        A("Inicio", href="/home", cls=(TextT.bold, "ml-1"), onclick="hideSidebar()"),
+                        cls="mt-0 mb-0 bg-red-200"  # Espaciado superior coherente
+                    ),
+                    # Accordion de ventas y compras
+                    Accordion(
+                        AccordionItem(
+                            DivHStacked(UkIcon(icon="shopping-bag", cls="ml-4"), Span("Ventas", cls="ml-2")),
+                            Ul(
+                                Li(A('Presupuestos',
+                                    hx_get='/servicios',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                Li(A('Pedidos',
+                                    href='/home',
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                hidden='',
+                                id='uk-nav-ventas',
+                                role='region',
+                                aria_labelledby='uk-nav-label-ventas',
+                                cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0 !space-y-0'
+                            ),
+                            cls="mt-4"
+                        ),
+                        AccordionItem(
+                            DivHStacked(UkIcon(icon="shopping-cart", cls="ml-4"), Span("Compras", cls="ml-2")),
+                            Ul(
+                                Li(A('Noticias',
+                                    hx_get='/noticias',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                Li(A('Servicios',
+                                    hx_get='/servicios',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                hidden='',
+                                id='uk-nav-compras',
+                                role='region',
+                                aria_labelledby='uk-nav-label-compras',
+                                cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0 !space-y-0'
+                            ),
+                            cls="mt-4"
+                        ),
+                        multiple=False,
+                        animation=True,
+                        cls="!space-y-0 !m-0 !p-0 !border-none !border-0 bg-red-200",
+                        style="padding: 0px; margin: 0px;"
+                    )
+                ),
+                # Botón fijo al fondo
+                Div(cls="hidden lg:block p-4 mt-auto")(
+                    Button("Ver planes", cls=(ButtonT.primary, "w-full"))
+                )
+            )
+        )
+
+    sidebar = Div(
+        cls="w-64 h-screen fixed inset-y-0 left-0 bg-gray-700 text-white overflow-auto hidden lg:block z-20 shadow-lg",
+        id="sidebar"
+    )(
+        Div(cls="flex flex-col h-full")(
+            Div(cls="flex-1")(
+                # Logo
+                Div(cls="hidden lg:flex items-center justify-center py-6")(
+                    DivFullySpaced(
+                        A(
+                            DivLAligned(
+                                UkIcon('recycle', height=30, width=30),
+                                H3(APP_NOMBRE, cls="pl-2"),
+                                cls="px-4"
+                            ),
+                            href='/', onclick="hideSidebar()"
+                        ),
+                        logout_button()
+                    )
+                ),
+
+                # Contenedor de Inicio + Accordion (espaciado controlado)
+                Div(cls="flex flex-col gap-0 !space-y-0")(
+                    # Inicio
+                    DivHStacked(
+                        UkIcon(icon="home", cls="ml-4"),
+                        A("Inicio", href="/home", cls=(TextT.bold, "ml-5"), onclick="hideSidebar()"),
+                        cls="mt-0 mb-0"
+                    ),
+
+                    # Línea separadora
+                    Div(cls="h-[14px]"),
+                    Hr(cls="mt-4"),
+
+                    # Accordion de secciones
+                    Accordion(
+                        AccordionItem(
+                            DivHStacked(UkIcon(icon="shopping-bag", cls="ml-4"), Span("Ventas", cls="ml-2")),
+                            Ul(
+                                Li(A('Presupuestos',
+                                    hx_get='/servicios',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                Li(A('Pedidos',
+                                    href='/home',
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                hidden='',
+                                id='uk-nav-ventas',
+                                role='region',
+                                aria_labelledby='uk-nav-label-ventas',
+                                cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0 !space-y-0'
+                            ),
+                            cls="mt-0 mb-0"
+                        ),
+                        AccordionItem(
+                            DivHStacked(UkIcon(icon="shopping-cart", cls="ml-4"), Span("Compras", cls="ml-2")),
+                            Ul(
+                                Li(A('Noticias',
+                                    hx_get='/noticias',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                Li(A('Servicios',
+                                    hx_get='/servicios',
+                                    hx_target="#main-content",
+                                    onclick="hideSidebar()",
+                                    cls="block px-4 py-[2px] hover:bg-secondary")),
+                                hidden='',
+                                id='uk-nav-compras',
+                                role='region',
+                                aria_labelledby='uk-nav-label-compras',
+                                cls='uk-nav-sub uk-nav-primary !mt-0 !mb-0 !pb-0 !space-y-0'
+                            ),
+                            cls="mt-0 mb-0"
+                        ),
+                        multiple=False,
+                        animation=True,
+                        cls="!space-y-0 !m-0 !p-0"
+                    )
+                )
+            ),
+
+            # Botón fijo al fondo
+            Div(cls="hidden lg:block p-4 mt-auto")(
+                Button("Ver planes", cls=(ButtonT.primary, "w-full"))
+            )
+        )
+    )
+
+
 
     # ----------------------------------------------------------------------------
     # 2. Navbar móvil (solo en <lg): "Mi Empresa" clicable y botón menú
@@ -430,37 +564,38 @@ def main_page(session:dict={}):
     mobile_navbar = Div(
         cls="flex items-center justify-between p-4 bg-gray-700 text-white lg:hidden shadow-md"
         )(
-        A(
-            DivLAligned(
-                UkIcon('recycle',height=30,width=30),
-                H3(APP_NOMBRE, cls="pl-2"),
-                cls="lg:px-4 px-2"
+            DivFullySpaced(
+                DivLAligned(
+                    A(
+                        DivLAligned(
+                            UkIcon('recycle',height=30,width=30),
+                            H3(APP_NOMBRE, cls="pl-2"),
+                            cls="lg:px-4 px-2"
+                        ),
+                        href='/home', onclick="hideSidebar()"
+                    ),
+                ),
+                DivRAligned(logout_button(), cls="pr-6"),
             ),
-            href='/home', onclick="hideSidebar()"
-        ),
-        Label(
-            "☰",
-            cls="btn btn-primary",
-            onclick="toggleSidebar()"
-        )
-    )
+            Label(
+                "☰",
+                cls="btn btn-primary",
+                onclick="toggleSidebar()"
+            )
+       )
 
     # ----------------------------------------------------------------------------
     # 3. Contenido principal ajustado para pantalla móvil
     #    - pt-4 en móvil para quedar cerca del navbar
     #    - lg:pt-0 en desktop
     #    - ml-0 lg:ml-64 para dejar espacio al sidebar en desktop
-    contenido_home = Div(cls="pt-1 lg:pt-0 ml-0 lg:ml-64", id="main-content")(
-        # ex_navbar(),
-        # H1("Bienvenido al Dashboard", cls=(TextT.xl, TextT.bold, "mb-6")),
-        # P("Esta es la zona principal de la aplicación de gestión empresarial.", cls=TextPresets.muted_sm)
-        Container(
-            # DivCentered(cls="min-h-screen flex items-center justify-center bg-red-200")(
-            DivCentered(cls="min-h-screen flex items-center justify-center bg-red-200")(
+    contenido_home = Div(cls="h-screen pt-1 lg:pt-0 ml-0 lg:ml-64", id="main-content")(
+        Div(cls="h-full bg-red-200 flex items-center justify-center px-4 py-8")(
+            Container(  # Aquí solo centramos el Card sin afectar el fondo
                 Card(
                     DivVStacked(
                         DivLAligned(
-                            UkIcon('recycle',height=30,width=30),
+                            UkIcon('recycle', height=30, width=30),
                             H2(APP_NOMBRE, cls="ml-2"),
                             cls="text-default"
                         ),
@@ -468,12 +603,12 @@ def main_page(session:dict={}):
                         H5(f"Hola, {session['user']['username'].capitalize()}"),
                         Subtitle("Bienvenido a tu aplicación de gestión favorita !"),
                         DivHStacked(cls="pt-8")(
-                            A("Cerrar sesión", href="/logout", cls="btn bg-red-500 text-white")
+                            logout_button(caption=session['user']['username']),
                         ),
                     ),
-                    # cls="w-full max-w-md p-2 space-y-2"
                     cls="w-full max-w-md p-2 space-y-2"
                 ),
+                # footer(),
             )
         )
     )

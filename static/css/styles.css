@@ -1,0 +1,7 @@
+/* Tooltips */
+.uk-tooltip {
+    background: #1e1e1e !important;
+    color: #ffd700 !important;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}

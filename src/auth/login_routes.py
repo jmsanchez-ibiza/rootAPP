@@ -21,7 +21,10 @@ def login_form(next_url):
                             cls="text-default"
                         ),
                         DividerSplit(cls="w-4/5 self-center border border-primary"),
-                        H3("Iniciar sesión"),
+                        DivVStacked(
+                            H3("Iniciar sesión"),
+                            UkIcon('log-in',height=30,width=30, cls="text-green-600"),
+                        ),
                         Subtitle("Introduce tus credenciales para acceder al sistema"),
                         Form(
                             LabelInput("Nombre de usuario", id="username", placeholder="Tu nombre de usuario", autofocus=True),
@@ -29,7 +32,7 @@ def login_form(next_url):
                             Button("Acceder", cls=(ButtonT.primary, "w-full")),
                             cls="space-y-4", action="/login_post", method="POST"
                         ),
-                        A("¿Olvidaste tu contraseña?", href="#", cls=(AT.muted, TextT.sm, "text-center"))
+                        A("¿Olvidaste tu contraseña?", href="#", cls=(AT.muted, TextT.sm, "text-center"), uk_tooltip="title: Mala suerte, debes ser más cuidadoso...;pos: bottom")
                     ),
                     cls="w-full max-w-md p-6 space-y-6"
                 ),
@@ -41,34 +44,6 @@ def login_form(next_url):
 
 # Función para inicializar rutas de login
 def init_routes(rt):
-
-    @rt('/login/{errors}')
-    def get(session, request, errors: str = ""):
-        next_url = request.query_params.get('next', '/')  # Obtener next o redirigir a home por defecto
-
-        # Div(id='main-content', cls='p-2 rounded', style='background-color: gainsboro;')(
-        contenido = \
-            Div(cls="row justify-content-center")(
-                Div(cls="col-md-6 p-6")(
-                    Form(action="/login_post", method="POST", cls="boot-modal-content p-6")(
-                        Div(cls="boot-modal-header text-center")(
-                            H3(cls="text-primary fs-3")("Acceso a la APP"),
-                        ),
-                        Div(cls="boot-modal-body")(
-                            # P(f"{errors}") if errors else "",
-                            login_form(next_url=next_url),
-                        ),
-                        Div(cls="boot-modal-footer text-center")(
-                            Button(cls="btn btn-secondary my-2 mx-2", type="button", hx_get="/", hx_target="#main-content", hx_swap="innerHTML")("Cancelar"),
-                            Button(cls="btn btn-primary my-2", type="submit")("Acceder"),
-                        )
-                    ) # Fin del form
-                )
-            )
-        # )
-
-        return "Hola"
-
 
     @rt('/login_post')
     async def post(session, request):

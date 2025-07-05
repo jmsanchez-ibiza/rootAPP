@@ -25,8 +25,11 @@ LIVE = os.getenv("LIVE", "False").lower() == "true"
 
 # Configurar headers
 hdrs = [
+    Script(src='https://cdn.jsdelivr.net/npm/sweetalert2@11'),
     Theme.green.headers(daisy=True),
     Link(rel="icon", type="image/x-ico", href="img/recycle.png"),
+    Link(rel='stylesheet', href='css/styles.css', type='text/css'),
+    Script(src="js/main.js"),
 ]
 
 # Creamos la aplicación con tema "blue" de MonsterUI + DaisyUI activo
@@ -40,7 +43,7 @@ app, rt = fast_app(
 )
 
 # 📌 Configurar Toasts -> TENGO QUE VER COMO FUNCIONA ESTO
-setup_toasts(app, duration=3000)
+setup_toasts(app, duration=1500)
 
 
 # Importar los controladores
